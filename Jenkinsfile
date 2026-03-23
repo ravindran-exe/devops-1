@@ -21,5 +21,10 @@ pipeline {
                 sh 'docker run -d -p 80:80 --name react-sample react-sample'
             }
         }
+        stage('Cleanup') {
+            steps {
+                sh 'docker system prune -f'
+            }
+        }
     }
 }
