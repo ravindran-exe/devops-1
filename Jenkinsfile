@@ -1,29 +1,50 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "react-sample"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        CONTAINER_NAME = "react-sample"
+    }
+
     stages {
+
         stage('Clone Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/ravindran-exe/devops-1.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
-                sh 'docker build -t react-sample .'
+                sh '''
+                docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                '''
             }
         }
 
-        stage('Run Container') {
+        stage('Stop Old Container') {
             steps {
-                sh 'docker stop react-sample || true'
-                sh 'docker rm react-sample || true'
-                sh 'docker run -d -p 80:80 --name react-sample react-sample'
+                sh '''
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                '''
             }
         }
-        stage('Cleanup') {
+
+        stage('Run New Container') {
             steps {
-                sh 'docker system prune -f'
+                sh '''
+                docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Post Cleanup') {
+            steps {
+                sh '''
+                docker image prune -f
+                '''
             }
         }
     }
